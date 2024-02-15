@@ -1,4 +1,4 @@
-./src/api_hotel/__pycache__/
+src/api_hotel/__pycache__/
 .idea
 .env
 .env.mysql

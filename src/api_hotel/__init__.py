@@ -2,7 +2,7 @@ from .database import db
 from flask import Flask
 from flask_migrate import Migrate
 from .config import config
-
+from .models import Client, Room, Booking
 migrate = Migrate()
 
 
