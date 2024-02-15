@@ -1,0 +1,27 @@
+version: "2.23.3"
+
+services:
+  db:
+    image: mysql:latest
+    env_file:
+      - .env.mysql
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    ports:
+      - "3306:3306"
+
+  api:
+    build:
+      context: .
+    volumes:
+      - "./src/api_hotel:/app/api_hotel"
+    ports:
+        - "5000:5000"
+    env_file:
+        - .env
+
+
+
+volumes:
+    db_data:
