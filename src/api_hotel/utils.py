@@ -24,7 +24,6 @@ def check_input_types(data, fields):
 
 
 def get_random_element_of_list(input_list):
-
     if len(input_list) == 0:
         return None
 
@@ -32,9 +31,9 @@ def get_random_element_of_list(input_list):
 
 
 def is_room_available(room, arrival_date, departure_date):
-
     for booking in room.bookings:
 
+        # If you struggle to understand this condition, you can refer to the schema in the README
         if (arrival_date <= booking.departure_date <= departure_date) \
                 or (arrival_date <= booking.arrival_date <= departure_date) \
                 or (booking.arrival_date <= arrival_date <= booking.departure_date)\
