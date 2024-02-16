@@ -6,7 +6,7 @@ from .database import db
 
 # Limit the possible types of rooms and status of booking to make the seed more coherent
 SEED_TYPE_OF_ROOMS = ['simple', 'double', 'suite', "delux", 'presidentielle']
-SEED_STATUS_OF_BOOKING = ['reserved', 'canceled', 'paid']
+SEED_STATUS_OF_BOOKING = ['Confirmee', 'annulee', 'En cours de validation']
 
 
 def create_seed_client():
@@ -45,11 +45,17 @@ def create_seed_booking(rooms, clients):
     # Make sure the arrival date is before the departure date
     if departure_date < arrival_date:
         arrival_date, departure_date = departure_date, arrival_date
-    return Booking(client=client, room=room, arrival_date=arrival_date, departure_date=departure_date, status=get_random_element_of_list(SEED_STATUS_OF_BOOKING))
+    return Booking(
+        client=client,
+        room=room,
+        arrival_date=arrival_date,
+        departure_date=departure_date,
+        status=get_random_element_of_list(SEED_STATUS_OF_BOOKING)
+    )
 
 
 def create_seed_bookings(number_of_bookings=10):
-    # Make the db query here so it is run only once
+    # Make the db query here, so it is run only once
     # We need to have reals rooms and clients to create a booking and have a coherent db
     rooms = db.session.query(Room).all()
     clients = db.session.query(Client).all()

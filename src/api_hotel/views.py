@@ -1,7 +1,7 @@
 from flask import request, jsonify
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
-from .utils import get_missing_field, check_input_types,is_room_available
+from .utils import get_missing_field, check_input_types, is_room_available
 from .models import Room, Booking
 from .database import db
 from .serializers import serialize_room, serialize_booking, serialize_client
@@ -43,8 +43,6 @@ def get_available_rooms():
     )
 
 
-
-
 def run_client_seeds(number_of_seeds):
     try:
         clients = create_seed_clients(number_of_seeds) 
@@ -53,7 +51,8 @@ def run_client_seeds(number_of_seeds):
         return clients
     except IntegrityError:
         # If the fake data is not good for the db, we try again
-        # Most of the time it's because the room number is already used so we can afford to try again because it will quickly find a unique number as it's unlikely to have a lot rooms in the db.
+        # Most of the time it's because the room number is already used, so we can afford to try again
+        # because it will quickly find a unique number as it's unlikely to have a lot of rooms in the db.
         run_client_seeds(number_of_seeds)
 
 
@@ -77,7 +76,8 @@ def run_booking_seeds(number_of_seeds):
         run_booking_seeds(number_of_seeds)
 
 
-# Create me a function populate_db that create 10 rows for each class o the model. Please make data coherant,and use faker to have better data
+# Create me a function populate_db that create 10 rows for each class o the model. Please make data coherent,
+# and use faker to have better data
 def run_seeds(number_of_seeds):
     # Check if the number of seeds is valid
     # We limit it to 10 to avoid adding too much data and struggling with the unique constraints
@@ -108,7 +108,8 @@ def run_seeds(number_of_seeds):
 
 def delete_booking(booking_id):
     try:
-        # get_or_404 method is great but returns that the routes doesn't exist but here we want to specify that it's the booking doesn't exist
+        # get_or_404 method is great but returns that the routes doesn't exist,
+        # but here we want to specify that it's the booking doesn't exist
         booking = Booking.query.get(booking_id)
         serialized_booking = serialize_booking(booking)
     except Exception:

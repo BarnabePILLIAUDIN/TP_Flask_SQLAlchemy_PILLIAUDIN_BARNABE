@@ -16,12 +16,14 @@ class Room(db.Model):
     bookings = db.relationship('Booking', backref='room', lazy=True)
 
 
-
-
 class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     client_id = db.Column(db.Integer, db.ForeignKey('client.id'))
     room_id = db.Column(db.Integer, db.ForeignKey('room.id'))
     arrival_date = db.Column(db.DateTime, nullable=False)
     departure_date = db.Column(db.DateTime, nullable=False)
-    status = db.Column(db.String(100), nullable=False)
+    status = db.Column(
+        db.Enum('Confirmee', 'annulee', 'En cours de validation'),
+        default='en cours de validation',
+        nullable=False
+    )
