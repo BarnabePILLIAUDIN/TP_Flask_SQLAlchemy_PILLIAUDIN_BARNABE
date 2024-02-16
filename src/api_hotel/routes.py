@@ -1,11 +1,12 @@
 from flask import Blueprint
 from .views import create_room, delete_room, edit_room, \
-  delete_booking, run_seeds, get_available_rooms
+  delete_booking, run_seeds, get_available_rooms, create_booking
 
 main = Blueprint('main', __name__)
 
 
 # Booking routes
+main.add_url_rule('/api/reservations', 'create_booking', create_booking, methods=['POST'])
 main.add_url_rule('/api/reservations/<int:booking_id>', 'delete_booking', delete_booking, methods=['DELETE'])
 
 # Rooms routes

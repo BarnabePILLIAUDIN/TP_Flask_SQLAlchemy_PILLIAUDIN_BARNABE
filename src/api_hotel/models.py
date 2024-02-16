@@ -1,4 +1,5 @@
 from .database import db
+from .constants import STATUS_OF_BOOKING
 
 
 class Client(db.Model):
@@ -23,7 +24,7 @@ class Booking(db.Model):
     arrival_date = db.Column(db.DateTime, nullable=False)
     departure_date = db.Column(db.DateTime, nullable=False)
     status = db.Column(
-        db.Enum('Confirmee', 'annulee', 'En cours de validation'),
+        db.Enum(*STATUS_OF_BOOKING, name='status_of_booking'),
         default='en cours de validation',
         nullable=False
     )

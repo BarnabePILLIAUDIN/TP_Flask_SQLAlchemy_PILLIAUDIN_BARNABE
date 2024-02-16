@@ -6,33 +6,36 @@ from .models import Room, Booking
 from .database import db
 from .serializers import serialize_room, serialize_booking, serialize_client
 from .seeds import create_seed_clients, create_seed_rooms, create_seed_bookings
-
-CREATE_ROOMS_FIELDS = [
-    {
-        "name": "numero",
-        "type": int,
-        "required": True,
-    },
-    {
-        "name": "type",
-        "type": str,
-        "required": True,
-    },
-    {
-        "name": "prix",
-        "type": float,
-        "required": True,
-    }
-]
+from .constants import GET_AVAILABLE_ROOMS_FIELDS, CREATE_BOOKING_FIELDS, CREATE_ROOMS_FIELDS
 
 
 def get_available_rooms():
     data = request.get_json()
+
+    # Check inputs
+    missing_fields = get_missing_field(data, GET_AVAILABLE_ROOMS_FIELDS)
+    if missing_fields:
+        return jsonify({
+            "success": False,
+            "message": f'Requette invalide -> Les champs suivants son manquants: {missing_fields}'
+        }), 400
+
+    wrong_fields = check_input_types(data, GET_AVAILABLE_ROOMS_FIELDS)
+    if wrong_fields:
+        return jsonify({
+            "success": False,
+            "message": f"Requette invalide -> Les champs suivants n'ont pas le bon type: {wrong_fields}"
+        }), 400
+
+    # Sanitizing inputs
     arrival_date = datetime.strptime(data['date_arrivee'], '%Y-%m-%d')
     departure_date = datetime.strptime(data['date_depart'], '%Y-%m-%d')
+
     rooms = Room.query.all()
+
     if len(rooms) == 0:
         return jsonify([])
+
     availables_rooms = []
     for room in rooms:
         if is_room_available(room, arrival_date, departure_date):
@@ -43,6 +46,54 @@ def get_available_rooms():
     )
 
 
+def create_booking():
+    data = request.get_json()
+
+    # Check inputs
+    missing_fields = get_missing_field(data, CREATE_BOOKING_FIELDS)
+    if missing_fields:
+        return jsonify({
+            "success": False,
+            "message": f'Requette invalide -> Les champs suivants son manquants: {missing_fields}'
+        }), 400
+
+    wrong_fields = check_input_types(data, CREATE_BOOKING_FIELDS)
+    if wrong_fields:
+        return jsonify({
+            "success": False,
+            "message": f"Requette invalide -> Les champs suivants n'ont pas le bon type: {wrong_fields}"
+        }), 400
+
+    # Sanitizing inputs
+    arrival_date = datetime.strptime(data['date_arrivee'], '%Y-%m-%d')
+    departure_date = datetime.strptime(data['date_depart'], '%Y-%m-%d')
+
+    # Check if the room is available
+    room = Room.query.get(data['id_chambre'])
+    if not is_room_available(room, arrival_date, departure_date):
+        return jsonify({
+            "success": False,
+            "message": "Chambre indisponible"
+        }), 400
+
+    # Create the booking
+    booking = Booking(
+        arrival_date=arrival_date,
+        departure_date=departure_date,
+        status="En cours de validation",
+        client_id=data['id_client'],
+        room_id=data['id_chambre']
+    )
+    db.session.add(booking)
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "message": "Reservation creee avec succes",
+    })
+
+
+# Separated the seeds in many functions to make it less expensive to run again if the data is not good for the db
 def run_client_seeds(number_of_seeds):
     try:
         clients = create_seed_clients(number_of_seeds) 
@@ -133,12 +184,15 @@ def delete_booking(booking_id):
 
 def create_room():
     data = request.get_json()
+
+    # Check inputs
     missing_fields = get_missing_field(data, CREATE_ROOMS_FIELDS)
     if missing_fields:
         return jsonify({
             "success": False,
             "message": f'Requette invalide -> Les champs suivants son manquants: {missing_fields}'
                 }), 400
+
     wrong_fields = check_input_types(data, CREATE_ROOMS_FIELDS)
     if wrong_fields:
         return jsonify({
@@ -150,6 +204,7 @@ def create_room():
         room = Room(number=data['numero'], type=data['type'], price=data['prix'])
         db.session.add(room)
         db.session.commit()
+
     except IntegrityError:
         return jsonify({
             "success": False,
@@ -165,9 +220,11 @@ def create_room():
 
 def edit_room(room_id):
     data = request.get_json()
+
     try:
         room = Room.query.get(room_id)
         serialized_room = serialize_room(room)
+
     except Exception:
         return jsonify({
             "success": False,
