@@ -16,6 +16,7 @@ services:
       context: .
     volumes:
       - "./src/api_hotel:/app/src/api_hotel"
+      - ./src/log.py:/app/src/log.py
     ports:
         - "5000:5000"
     env_file:

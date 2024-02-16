@@ -4,7 +4,7 @@ from .database import db
 class Client(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(100), unique=True,nullable=False)
+    email = db.Column(db.String(100), unique=True, nullable=False)
     bookings = db.relationship('Booking', backref='client', lazy=True)
 
 
@@ -16,12 +16,12 @@ class Room(db.Model):
     bookings = db.relationship('Booking', backref='room', lazy=True)
 
 
+
+
 class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     client_id = db.Column(db.Integer, db.ForeignKey('client.id'))
     room_id = db.Column(db.Integer, db.ForeignKey('room.id'))
-    arrival_date = db.Column(db.Date, nullable=False)
-    departure_date = db.Column(db.Date, nullable=False)
+    arrival_date = db.Column(db.DateTime, nullable=False)
+    departure_date = db.Column(db.DateTime, nullable=False)
     status = db.Column(db.String(100), nullable=False)
-
-

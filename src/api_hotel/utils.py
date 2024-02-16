@@ -1,5 +1,6 @@
 from random import randint
 
+
 def get_missing_field(data, fields):
     missing_fields = []
     for field in fields:
@@ -16,7 +17,17 @@ def check_input_types(data, fields):
     return ', '.join(incorrect_fields)
 
 
-def get_random_element_of_list(list):
-    if len(list) == 0:
+def get_random_element_of_list(input_list):
+    if len(input_list) == 0:
         return None
-    return list[randint(0, len(list) - 1)]
+    return list[randint(0, len(input_list) - 1)]
+
+
+def is_room_available(room, arrival_date, departure_date):
+    for booking in room.bookings:
+        if (arrival_date <= booking.departure_date <= departure_date) \
+                or (arrival_date <= booking.arrival_date <= departure_date) \
+                or (booking.arrival_date <= arrival_date <= booking.departure_date)\
+                or (booking.arrival_date <= departure_date <= booking.departure_date):
+            return False
+    return True

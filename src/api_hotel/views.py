@@ -1,12 +1,13 @@
-from flask import request,jsonify
+from flask import request, jsonify
 from sqlalchemy.exc import IntegrityError
-from .utils import get_missing_field,check_input_types
+from datetime import datetime
+from .utils import get_missing_field, check_input_types,is_room_available
 from .models import Room, Booking
 from .database import db
-from .serializers import serialize_room,serialize_booking,serialize_client
-from .seeds import create_seed_clients,create_seed_rooms,create_seed_bookings
+from .serializers import serialize_room, serialize_booking, serialize_client
+from .seeds import create_seed_clients, create_seed_rooms, create_seed_bookings
 
-CREATE_ROOMS_FIELDS= [
+CREATE_ROOMS_FIELDS = [
     {
         "name": "numero",
         "type": int,
@@ -25,9 +26,23 @@ CREATE_ROOMS_FIELDS= [
 ]
 
 
-
 def get_available_rooms():
-    return 'get_available_rooms'
+    data = request.get_json()
+    arrival_date = datetime.strptime(data['date_arrivee'], '%Y-%m-%d')
+    departure_date = datetime.strptime(data['date_depart'], '%Y-%m-%d')
+    rooms = Room.query.all()
+    if len(rooms) == 0:
+        return jsonify([])
+    availables_rooms = []
+    for room in rooms:
+        if is_room_available(room, arrival_date, departure_date):
+            availables_rooms.append(room)
+
+    return jsonify(
+        [serialize_room(room) for room in availables_rooms]
+    )
+
+
 
 
 def run_client_seeds(number_of_seeds):
@@ -41,6 +56,7 @@ def run_client_seeds(number_of_seeds):
         # Most of the time it's because the room number is already used so we can afford to try again because it will quickly find a unique number as it's unlikely to have a lot rooms in the db.
         run_client_seeds(number_of_seeds)
 
+
 def run_room_seeds(number_of_seeds):
     try:
         rooms = create_seed_rooms(number_of_seeds)
@@ -49,6 +65,7 @@ def run_room_seeds(number_of_seeds):
         return rooms
     except IntegrityError:
         run_room_seeds(number_of_seeds)
+
 
 def run_booking_seeds(number_of_seeds):
     try:
@@ -59,6 +76,7 @@ def run_booking_seeds(number_of_seeds):
     except IntegrityError:
         run_booking_seeds(number_of_seeds)
 
+
 # Create me a function populate_db that create 10 rows for each class o the model. Please make data coherant,and use faker to have better data
 def run_seeds(number_of_seeds):
     # Check if the number of seeds is valid
@@ -66,7 +84,7 @@ def run_seeds(number_of_seeds):
     if number_of_seeds < 1 or number_of_seeds > 10:
         return jsonify({
             "success": False,
-            "message" : "Requette invalide -> Le nombre de donnees à ajouter doit être superieur à 0 et moins de 10"
+            "message": "Requette invalide -> Le nombre de donnees à ajouter doit être superieur à 0 et moins de 10"
         }), 400
 
     try:
@@ -76,28 +94,27 @@ def run_seeds(number_of_seeds):
     except Exception:
         return jsonify({
             "success": False,
-            "message" : "Erreur lors de l'ajout des donnees"
+            "message": "Erreur lors de l'ajout des donnees"
         }), 500
 
     return jsonify({
         "success": True,
-        "message" : "Donnees ajoutees avec succes",
-        "clients" : [serialize_client(client) for client in clients],
-        "rooms" : [serialize_room(room) for room in rooms],
-        "bookings" : [serialize_booking(booking) for booking in bookings]
+        "message": "Donnees ajoutees avec succes",
+        "clients": [serialize_client(client) for client in clients],
+        "rooms": [serialize_room(room) for room in rooms],
+        "bookings": [serialize_booking(booking) for booking in bookings]
     })
-
 
 
 def delete_booking(booking_id):
     try:
         # get_or_404 method is great but returns that the routes doesn't exist but here we want to specify that it's the booking doesn't exist
         booking = Booking.query.get(booking_id)
-        serialized_booking=serialize_booking(booking)
+        serialized_booking = serialize_booking(booking)
     except Exception:
         return jsonify({
             "success": False,
-            "message" : "Reservation introuvable"
+            "message": "Reservation introuvable"
         }), 404
 
     db.session.delete(booking)
@@ -106,8 +123,8 @@ def delete_booking(booking_id):
     return jsonify(
         {
             "success": True,
-            "message" : "Reservation supprimee avec succes",
-            "booking" : serialized_booking
+            "message": "Reservation supprimee avec succes",
+            "booking": serialized_booking
         }
     
     )
@@ -119,13 +136,13 @@ def create_room():
     if missing_fields:
         return jsonify({
             "success": False,
-            "message" : f'Requette invalide -> Les champs suivants son manquants: {missing_fields}'
+            "message": f'Requette invalide -> Les champs suivants son manquants: {missing_fields}'
                 }), 400
     wrong_fields = check_input_types(data, CREATE_ROOMS_FIELDS)
     if wrong_fields:
         return jsonify({
             "success": False,
-            "message" : f"Requette invalide -> Les champs suivants n'ont pas le bon type: {wrong_fields}"
+            "message": f"Requette invalide -> Les champs suivants n'ont pas le bon type: {wrong_fields}"
         }), 400
 
     try:
@@ -135,23 +152,25 @@ def create_room():
     except IntegrityError:
         return jsonify({
             "success": False,
-            "message" : "Requette invalide -> Cette chambre existe dejà"
+            "message": "Requette invalide -> Cette chambre existe dejà"
         }), 400
 
     return {
         "success": True,
-        "message" : "Chambre ajoutee avec succes",
-        "room" : serialize_room(room)
+        "message": "Chambre ajoutee avec succes",
+        "room": serialize_room(room)
     }
 
+
 def edit_room(room_id):
+    data = request.get_json()
     try:
         room = Room.query.get(room_id)
-        serialized_room=serialize_room(room)
+        serialized_room = serialize_room(room)
     except Exception:
         return jsonify({
             "success": False,
-            "message" : "Chambre introuvable"
+            "message": "Chambre introuvable"
         }), 404
 
     for key, value in data.items():
@@ -161,19 +180,19 @@ def edit_room(room_id):
 
     return jsonify({
         "success": True,
-        "message" : "Chambre modifiee avec succes",
-        "room" : serialized_room
+        "message": "Chambre modifiee avec succes",
+        "room": serialized_room
     })
 
 
 def delete_room(room_id):
     try:
         room = Room.query.get(room_id)
-        serialized_room=serialize_room(room)
+        serialized_room = serialize_room(room)
     except Exception:
         return jsonify({
             "success": False,
-            "message" : "Chambre introuvable"
+            "message": "Chambre introuvable"
         }), 404
 
     db.session.delete(room)
@@ -181,7 +200,7 @@ def delete_room(room_id):
 
     return {
         "success": True,
-        "message" : "Chambre supprimee avec succes",
-        "room" : serialized_room
+        "message": "Chambre supprimee avec succes",
+        "room": serialized_room
     }
     
