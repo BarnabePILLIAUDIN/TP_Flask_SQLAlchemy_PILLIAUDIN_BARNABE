@@ -11,6 +11,7 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = config['database_uri']
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+
     db.init_app(app)
 
     migrate.init_app(app, db)

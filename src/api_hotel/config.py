@@ -1,6 +1,6 @@
 import os
 
-config={
+config = {
     "database_uri": os.environ['DATABASE_URI'],
 
 }

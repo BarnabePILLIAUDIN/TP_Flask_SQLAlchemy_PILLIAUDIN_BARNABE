@@ -6,12 +6,14 @@ def serialize_room(room):
         "type": room.type
     }
 
+
 def serialize_client(client):
     return {
         'id': client.id,
         "name": client.name,
         'email': client.email
     }
+
 
 def serialize_booking(booking):
     return {
